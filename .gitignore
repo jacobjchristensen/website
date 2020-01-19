@@ -1,0 +1,10 @@
+# .gitignore file
+
+# Ignore certain R files
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+# Ignore the public/ folder, as it will be automatically generated
+public/
