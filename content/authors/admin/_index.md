@@ -15,11 +15,10 @@ education:
     year: 2011
 email: "j.j.christensen@medisin.uio.no"
 interests:
-- Cardiovascular Disease
+- Cardiovascular risk factors
 - Lipid metabolism
-- Fatty acids
+- Dietary fatty acids
 - Genomics
-- Nutrition
 - Data science
 name: Jacob J. Christensen
 organizations:

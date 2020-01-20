@@ -1,40 +1,31 @@
 +++
-# A Featured Publications section created with the Featured Content widget.
-# This section displays publications from `content/publication/` which have
-# `featured = true` in their front matter.
-
-widget = "featured"  # See https://sourcethemes.com/academic/docs/page-builder/
+# A Projects section created with the Portfolio widget.
+widget = "portfolio"  # See https://sourcethemes.com/academic/docs/page-builder/
 headless = true  # This file represents a page section.
 active = true  # Activate this widget? true/false
-weight = 3  # Order that this section will appear.
+weight = 2  # Order that this section will appear.
 
-title = "Featured Publication"
+title = "Projects"
 subtitle = ""
 
 [content]
-  # Page type to display. E.g. post, talk, or publication.
-  page_type = "publication"
-  
-  # Choose how much pages you would like to display (0 = all pages)
-  count = 0
+  # Page type to display. E.g. project.
+  page_type = "project"
 
-  # Page order. Descending (desc) or ascending (asc) date.
-  order = "desc"
-
-  # Filter posts by a taxonomy term.
-  [content.filters]
-    tag = ""
-    category = ""
-    publication_type = ""
-  
 [design]
+  # Choose how many columns the section has. Valid values: 1 or 2.
+  columns = "2"
+
   # Toggle between the various page layout types.
   #   1 = List
   #   2 = Compact
   #   3 = Card
-  #   4 = Citation (publication only)
-  view = 3
-  
+  #   5 = Showcase
+  view = 2
+
+  # For Showcase view, flip alternate rows?
+  flip_alt_rows = false
+
 [design.background]
   # Apply a background color, gradient, or image.
   #   Uncomment (by removing `#`) an option to apply it.
@@ -62,3 +53,4 @@ subtitle = ""
  # CSS class.
  css_class = ""
 +++
+
