@@ -1,6 +1,6 @@
 # website
 
-## Professional website
+## Personal website
 
 This is the project website for [my personal website](https://jjchristensen.netlify.com/). 
 
