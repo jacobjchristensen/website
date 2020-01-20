@@ -33,19 +33,19 @@ social:
   link: mailto:j.j.christensen@medisin.uio.no
 - icon: twitter
   icon_pack: fab
-  link: https://twitter.com/jacobjchr
+  link: "https://twitter.com/jacobjchr"
 - icon: skype
   icon_pack: fab
   link: skype:jjuelchr?call
 - icon: github
   icon_pack: fab
-  link: https://github.com/jacobjchristensen
+  link: "https://github.com/jacobjchristensen"
 - icon: google-scholar
   icon_pack: ai
-  link: https://scholar.google.com/citations?user=m4i5I0sAAAAJ&hl=no
+  link: "https://scholar.google.com/citations?user=m4i5I0sAAAAJ&hl=no"
 - icon: orcid
   icon_pack: fab
-  link: https://orcid.org/0000-0001-8008-0650
+  link: "https://orcid.org/0000-0001-8008-0650"
 superuser: true
 user_groups:
 - Researchers
