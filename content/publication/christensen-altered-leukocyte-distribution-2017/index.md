@@ -1,12 +1,12 @@
 ---
 title: "Altered Leukocyte Distribution under Hypercholesterolemia: A Cross-Sectional Study in Children with Familial Hypercholesterolemia"
-date: 2017-01-01
-publishDate: 2020-01-19T15:12:12.170908Z
+date: 2017-11-01
+publishDate: 2021-01-04T07:50:54.157426Z
 authors: ["Jacob J. Christensen", "Liv T. Osnes", "Bente Halvorsen", "Kjetil Retterstøl", "Martin P. Bogsrud", "Cecilie Wium", "Arne Svilaas", "Ingunn Narverud", "Stine M. Ulven", "Pål Aukrust", "Kirsten B. Holven"]
 publication_types: ["2"]
-abstract: "BACKGROUND AND AIMS: Children with familial hypercholesterolemia (FH) have elevated LDL cholesterol from the first year of life, and represent a model of early-stage atherosclerosis. Data suggest that adults with FH have alterations in circulating monocyte subpopulations towards a more pro-inflammatory phenotype, but it is not known whether FH children have similar perturbations. In addition, there are no data on the distribution of lymphocyte subpopulations in FH children. The objective of the present study was to characterize the distributions of circulating monocyte and lymphocyte subpopulations in children with FH and healthy, normocholesterolemic children. METHODS: Using flow cytometry analysis, we analyzed whole blood B- and T-cell subpopulations and monocyte subpopulations in FH (n~=~23) and healthy (n~=~20) children. Moreover, we measured serum markers of leukocyte and endothelial cell activation using EIA. RESULTS: We found that FH children had monocytosis as well as a shift in the monocyte subpopulations. This shift was characterized by higher circulating pro-inflammatory and non-classical monocytes, and lower levels of classical monocytes, and seemed to be present only in FH children with low HDL cholesterol (HDL-C, below 1.3~mmol/L). Additionally, monocytes expressing CD18 and serum E-selectin were higher in FH children, in particular FH children with low HDL-C. CONCLUSIONS: FH children with low HDL-C had monocytosis as well as a shift in monocyte subpopulations towards a more pro-inflammatory phenotype. Our results suggest activation of monocytes at a very early stage of atherosclerosis in humans."
+abstract: ""
 featured: false
-publication: "*Atherosclerosis*"
+publication: ""
 tags: ["Adolescent", "Age Factors", "Atherosclerosis", "Biomarkers", "Case-Control Studies", "Child", "Children", "Cholesterol; HDL", "Cholesterol; LDL", "Cross-Sectional Studies", "Endothelial Cells", "Familial hypercholesterolemia", "Female", "Flow Cytometry", "Genetic Predisposition to Disease", "Humans", "Hyperlipoproteinemia Type II", "Inflammation", "Lymphocyte Activation", "Lymphocyte Count", "Lymphocytes", "Male", "Monocytes", "Phenotype"]
 doi: "10.1016/j.atherosclerosis.2016.11.031"
 ---
