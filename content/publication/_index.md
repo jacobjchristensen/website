@@ -16,7 +16,7 @@ header:
 # To import publications effectively from Zotero, use this recipe: 
   # 1. Create a *.bib BibTeX file with one or more references, fully prepped in Zotero. 
   # 2. In a terminal, `cd` to **website/**.
-  # 3. Import your publications with: `academic import --bibtex <path_to_your/publications.bib>`
+  # 3. Import your publications with: `academic import --bibtex content/publication/christensen-zotero-lib.bib --overwrite`
 ---
 
 Filter publications based on keywords, publication type, or date. 
