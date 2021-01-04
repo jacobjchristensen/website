@@ -1,15 +1,25 @@
 ---
 title: "Tidytuesday week 52"
 author: "Jacob J. Christensen"
-date: "`r format(Sys.time(), '%Y-%b-%d')`"
-output:
-  html_document:
-    df_print: paged
-    toc: yes
-    toc_depth: '5'
-    toc_float: yes
-    code_folding: show
-    theme: lumen
+date: '2021-01-04'
+slug: []
+categories:
+  - data science
+  - data visualizations
+  - tidytuesday
+  - rstats
+  - R
+tags: []
+subtitle: ''
+summary: ''
+authors: []
+lastmod: '2021-01-04T08:38:23+01:00'
+featured: no
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: no
+projects: []
 ---
 
 ```{r setup, include=FALSE}
@@ -128,7 +138,7 @@ data_tt_norway %>%
   geom_line()
 ```
 
-Then what about all the `_raw` variables? These variables are indices of under- or over-value of local currencies, compared to other currencies. These 
+Then what about all the `_raw` variables? These variables are indices of under- or over-value of local currencies, compared to other currencies. 
 
 ```{r fig.width=9, fig.height=2}
 data_tt_norway %>% 
@@ -326,7 +336,7 @@ data_tt %>%
 
 #### Area under the curve
 
-Look at the Norwegian trend again, but this time using a different geom highlighting the area under the curve (`geom_area`)
+Look at the Norwegian trend again, but this time using a different geom highlighting the area under the curve (`geom_area`). 
 
 ```{r fig.width=4, fig.height=1.5}
 data_tt_norway %>% 
@@ -571,5 +581,3 @@ This is a nice illustration! A bit busy right here, of course, but each panel wo
 ## In summary
 
 In summary, we went through a few illustrations from based on the Economist data set and application. 
-
----

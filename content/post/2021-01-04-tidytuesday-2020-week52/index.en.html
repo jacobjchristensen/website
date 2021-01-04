@@ -1,15 +1,25 @@
 ---
 title: "Tidytuesday week 52"
 author: "Jacob J. Christensen"
-date: "2021-jan-04"
-output:
-  html_document:
-    df_print: paged
-    toc: yes
-    toc_depth: '5'
-    toc_float: yes
-    code_folding: show
-    theme: lumen
+date: '2021-01-04'
+slug: []
+categories:
+  - data science
+  - data visualizations
+  - tidytuesday
+  - rstats
+  - R
+tags: []
+subtitle: ''
+summary: ''
+authors: []
+lastmod: '2021-01-04T08:38:23+01:00'
+featured: no
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: no
+projects: []
 ---
 
 <link href="/rmarkdown-libs/anchor-sections/anchor-sections.css" rel="stylesheet" />
@@ -412,7 +422,7 @@ nrow(data_tt_norway)</code></pre>
   ggplot(aes(date, value)) + 
   facet_wrap(~ name, scales = &quot;free_y&quot;) + 
   geom_line()</code></pre>
-<p><img src="/post/tidytuesday-week52_files/figure-html/unnamed-chunk-5-1.png" width="384" style="display: block; margin: auto;" /></p>
+<p><img src="/post/2021-01-04-tidytuesday-2020-week52/index.en_files/figure-html/unnamed-chunk-5-1.png" width="384" style="display: block; margin: auto;" /></p>
 <p>The data collection is more complete for <code>dollar_ex</code>. <code>GDP_dollar</code> starts at:</p>
 <pre class="r"><code>data_tt_norway %&gt;% 
   arrange(date) %&gt;% 
@@ -428,15 +438,15 @@ nrow(data_tt_norway)</code></pre>
   ggplot(aes(date, value)) + 
   facet_wrap(~ fct_inorder(name), scales = &quot;free_y&quot;) + 
   geom_line()</code></pre>
-<p><img src="/post/tidytuesday-week52_files/figure-html/unnamed-chunk-7-1.png" width="528" style="display: block; margin: auto;" /></p>
-<p>Then what about all the <code>_raw</code> variables? These variables are indices of under- or over-value of local currencies, compared to other currencies. These</p>
+<p><img src="/post/2021-01-04-tidytuesday-2020-week52/index.en_files/figure-html/unnamed-chunk-7-1.png" width="528" style="display: block; margin: auto;" /></p>
+<p>Then what about all the <code>_raw</code> variables? These variables are indices of under- or over-value of local currencies, compared to other currencies.</p>
 <pre class="r"><code>data_tt_norway %&gt;% 
   select(date, ends_with(&quot;_raw&quot;)) %&gt;% 
   pivot_longer(-date) %&gt;% 
   ggplot(aes(date, value)) + 
   facet_wrap(~ fct_inorder(name), scales = &quot;free_y&quot;, nrow = 1) + 
   geom_line()</code></pre>
-<p><img src="/post/tidytuesday-week52_files/figure-html/unnamed-chunk-8-1.png" width="864" style="display: block; margin: auto;" /></p>
+<p><img src="/post/2021-01-04-tidytuesday-2020-week52/index.en_files/figure-html/unnamed-chunk-8-1.png" width="864" style="display: block; margin: auto;" /></p>
 <p>It appears the Norwegian krone has been over-valued for many decades compared to USD, EURO, BGP, JPY and CNY, but in recent years it has normalized somewhat. Let’s look at the same values, but adjusted for GDP.</p>
 <pre class="r"><code>data_tt_norway %&gt;% 
   select(date, ends_with(&quot;_adjusted&quot;)) %&gt;% 
@@ -444,7 +454,7 @@ nrow(data_tt_norway)</code></pre>
   ggplot(aes(date, value)) + 
   facet_wrap(~ fct_inorder(name), scales = &quot;free_y&quot;, nrow = 1) + 
   geom_line()</code></pre>
-<p><img src="/post/tidytuesday-week52_files/figure-html/unnamed-chunk-9-1.png" width="864" style="display: block; margin: auto;" /></p>
+<p><img src="/post/2021-01-04-tidytuesday-2020-week52/index.en_files/figure-html/unnamed-chunk-9-1.png" width="864" style="display: block; margin: auto;" /></p>
 <p>Same as above, except the time series is a bit shorter due to limits in GDP (available only from July 2011).</p>
 </div>
 <div id="highlight-min-and-max-values" class="section level3">
@@ -455,7 +465,7 @@ nrow(data_tt_norway)</code></pre>
   geom_line() + 
   geom_point(data = . %&gt;% filter(local_price == max(local_price)), color = &quot;blue&quot;) + 
   geom_point(data = . %&gt;% filter(local_price == min(local_price)), color = &quot;red&quot;)</code></pre>
-<p><img src="/post/tidytuesday-week52_files/figure-html/unnamed-chunk-10-1.png" width="230.4" style="display: block; margin: auto;" /></p>
+<p><img src="/post/2021-01-04-tidytuesday-2020-week52/index.en_files/figure-html/unnamed-chunk-10-1.png" width="230.4" style="display: block; margin: auto;" /></p>
 </div>
 <div id="trend-line" class="section level3">
 <h3>Trend line</h3>
@@ -466,7 +476,7 @@ nrow(data_tt_norway)</code></pre>
   geom_smooth(method = &quot;lm&quot;, se = FALSE, color = &quot;black&quot;, size = 0.5) + 
   geom_point(data = . %&gt;% filter(local_price == max(local_price)), color = &quot;blue&quot;) + 
   geom_point(data = . %&gt;% filter(local_price == min(local_price)), color = &quot;red&quot;)</code></pre>
-<p><img src="/post/tidytuesday-week52_files/figure-html/unnamed-chunk-11-1.png" width="230.4" style="display: block; margin: auto;" /></p>
+<p><img src="/post/2021-01-04-tidytuesday-2020-week52/index.en_files/figure-html/unnamed-chunk-11-1.png" width="230.4" style="display: block; margin: auto;" /></p>
 <p>While the <code>geom_line</code> makes for nice-looking Tufte sparklines, the regression line can say something about trends. This could also have been shown as a smoothened line.</p>
 </div>
 </div>
@@ -501,7 +511,7 @@ date_start_end &lt;- data_tt$date %&gt;% unique() %&gt;% magrittr::extract(c(1, 
         axis.line = element_blank()) + 
   
   labs(x = NULL, y = NULL)</code></pre>
-<p><img src="/post/tidytuesday-week52_files/figure-html/unnamed-chunk-13-1.png" width="576" style="display: block; margin: auto;" /></p>
+<p><img src="/post/2021-01-04-tidytuesday-2020-week52/index.en_files/figure-html/unnamed-chunk-13-1.png" width="576" style="display: block; margin: auto;" /></p>
 <p>We see a general trend where the currencies tend to be more normalized or under-valued compared to USD over time.</p>
 <p>Switch to another geom to emphasize the trend for each country. Include trends for both raw and GDP-adjusted values for all currencies.</p>
 <pre class="r"><code>data_tt %&gt;% 
@@ -524,7 +534,7 @@ date_start_end &lt;- data_tt$date %&gt;% unique() %&gt;% magrittr::extract(c(1, 
         strip.background = element_blank()) + 
   
   labs(x = NULL, y = NULL)</code></pre>
-<p><img src="/post/tidytuesday-week52_files/figure-html/unnamed-chunk-14-1.png" width="768" style="display: block; margin: auto;" /></p>
+<p><img src="/post/2021-01-04-tidytuesday-2020-week52/index.en_files/figure-html/unnamed-chunk-14-1.png" width="768" style="display: block; margin: auto;" /></p>
 <p>Here, a more interesting trend emerges where we see large differences between currencies. Most other currencies are over-valued compared to CNY, but similar to the other currencies they all tend to normalize in later years.</p>
 </div>
 <div id="lollipop-chart" class="section level4">
@@ -553,7 +563,7 @@ date_start_end &lt;- data_tt$date %&gt;% unique() %&gt;% magrittr::extract(c(1, 
         axis.ticks.x = element_blank()) + 
   
   labs(x = NULL, y = NULL)</code></pre>
-<p><img src="/post/tidytuesday-week52_files/figure-html/unnamed-chunk-15-1.png" width="576" style="display: block; margin: auto;" /></p>
+<p><img src="/post/2021-01-04-tidytuesday-2020-week52/index.en_files/figure-html/unnamed-chunk-15-1.png" width="576" style="display: block; margin: auto;" /></p>
 <p>This plot could be extended to 1) other data points (2007, 2011, etc), 2) other base currencies (Euro, British pounds, etc), or 3) GDP-adjusted values (for a limited range). The Economist application let’s the user switch between these parts of the data easily.</p>
 </div>
 <div id="sina-plot" class="section level4">
@@ -592,11 +602,11 @@ date_start_end &lt;- data_tt$date %&gt;% unique() %&gt;% magrittr::extract(c(1, 
         strip.background = element_blank()) + 
   
   labs(x = NULL, y = NULL)</code></pre>
-<p><img src="/post/tidytuesday-week52_files/figure-html/unnamed-chunk-16-1.png" width="384" style="display: block; margin: auto;" /></p>
+<p><img src="/post/2021-01-04-tidytuesday-2020-week52/index.en_files/figure-html/unnamed-chunk-16-1.png" width="384" style="display: block; margin: auto;" /></p>
 </div>
 <div id="area-under-the-curve" class="section level4">
 <h4>Area under the curve</h4>
-<p>Look at the Norwegian trend again, but this time using a different geom highlighting the area under the curve (<code>geom_area</code>)</p>
+<p>Look at the Norwegian trend again, but this time using a different geom highlighting the area under the curve (<code>geom_area</code>).</p>
 <pre class="r"><code>data_tt_norway %&gt;% 
   ggplot(aes(date, usd_raw)) + 
   
@@ -610,7 +620,7 @@ date_start_end &lt;- data_tt$date %&gt;% unique() %&gt;% magrittr::extract(c(1, 
   theme_classic() + 
   theme(axis.line = element_blank()) + 
   labs(x = NULL, y = NULL)</code></pre>
-<p><img src="/post/tidytuesday-week52_files/figure-html/unnamed-chunk-17-1.png" width="384" style="display: block; margin: auto;" /></p>
+<p><img src="/post/2021-01-04-tidytuesday-2020-week52/index.en_files/figure-html/unnamed-chunk-17-1.png" width="384" style="display: block; margin: auto;" /></p>
 <p>A plot like this could be very nice for an HTML table, such as that displayed in the Economist application. Try to do the same with different fill colors.</p>
 <pre class="r"><code>data_tt_norway %&gt;% 
   mutate(value = if_else(usd_raw &lt; 0, true = &quot;under-valued&quot;, false = &quot;over-valued&quot;)) %&gt;% 
@@ -627,7 +637,7 @@ date_start_end &lt;- data_tt$date %&gt;% unique() %&gt;% magrittr::extract(c(1, 
   theme(legend.position = &quot;none&quot;, 
         axis.line = element_blank()) + 
   labs(x = NULL, y = NULL)</code></pre>
-<p><img src="/post/tidytuesday-week52_files/figure-html/unnamed-chunk-18-1.png" width="384" style="display: block; margin: auto;" /></p>
+<p><img src="/post/2021-01-04-tidytuesday-2020-week52/index.en_files/figure-html/unnamed-chunk-18-1.png" width="384" style="display: block; margin: auto;" /></p>
 <p><em>We see a problem with this strategy</em>: the fill color changes the grouping of the points so that there are multiple lines drawn, one for those points above zero and one for those below. I tried a number of different solutions to this issue but none resolved the problem.</p>
 <p>It seems I need to <em>interpolate</em> new points approximately where the line crosses y = 0. How to do that? <a href="https://community.rstudio.com/t/plotting-negative-and-positive-laues/29765/2">Here is one solution</a>, and <a href="https://stackoverflow.com/questions/27135962/how-to-fill-geom-polygon-with-different-colors-above-and-below-y-0/27137211#27137211">here is another</a>.</p>
 <p>Let’s try it out (in slightly modified form from <a href="https://stackoverflow.com/questions/27135962/how-to-fill-geom-polygon-with-different-colors-above-and-below-y-0/27137211#27137211">the Stackoverflow Q&amp;A</a>):</p>
@@ -666,7 +676,7 @@ d %&gt;%
   geom_area(data = . %&gt;% filter(y &lt;= 0), fill = &quot;red&quot;, alpha = 0.2) +
   geom_area(data = . %&gt;% filter(y &gt;= 0), fill = &quot;blue&quot;, alpha = 0.2) +
   geom_point(aes(color = group))</code></pre>
-<p><img src="/post/tidytuesday-week52_files/figure-html/unnamed-chunk-19-1.png" width="288" style="display: block; margin: auto;" /></p>
+<p><img src="/post/2021-01-04-tidytuesday-2020-week52/index.en_files/figure-html/unnamed-chunk-19-1.png" width="288" style="display: block; margin: auto;" /></p>
 <p>This could be wrapped in a function so that it’s easier to compute for many sets.</p>
 <pre class="r"><code>interpolate &lt;- function(data, x, y, x_is_date = TRUE) {
   
@@ -711,7 +721,7 @@ d %&gt;%
   geom_area(data = . %&gt;% filter(value &lt;= 0), fill = &quot;red&quot;, alpha = 0.2) +
   geom_area(data = . %&gt;% filter(value &gt;= 0), fill = &quot;blue&quot;, alpha = 0.2) +
   geom_point()</code></pre>
-<p><img src="/post/tidytuesday-week52_files/figure-html/unnamed-chunk-21-1.png" width="230.4" style="display: block; margin: auto;" /></p>
+<p><img src="/post/2021-01-04-tidytuesday-2020-week52/index.en_files/figure-html/unnamed-chunk-21-1.png" width="230.4" style="display: block; margin: auto;" /></p>
 <p>Seems to work fine. And now for the real data.</p>
 <pre class="r"><code>data_tt_norway %&gt;% 
   mutate(value = if_else(usd_raw &lt; 0, true = &quot;under-valued&quot;, false = &quot;over-valued&quot;)) %&gt;% 
@@ -732,7 +742,7 @@ d %&gt;%
         axis.line = element_blank(), 
         title = element_text(size = 8)) + 
   labs(x = NULL, y = NULL, title = &quot;Norway&quot;)</code></pre>
-<p><img src="/post/tidytuesday-week52_files/figure-html/unnamed-chunk-22-1.png" width="384" style="display: block; margin: auto;" /></p>
+<p><img src="/post/2021-01-04-tidytuesday-2020-week52/index.en_files/figure-html/unnamed-chunk-22-1.png" width="384" style="display: block; margin: auto;" /></p>
 <p>Alright - it works! We don’t need the top and bottom points with the fill color, though. Wrap it all in a function.</p>
 <pre class="r"><code>area_plot &lt;- function(data, y, country, y_limits = NULL) {
   
@@ -757,7 +767,7 @@ d %&gt;%
 <p>Test it.</p>
 <pre class="r"><code>data_tt_norway %&gt;% 
   area_plot(y = usd_raw, country = &quot;Norway&quot;)</code></pre>
-<p><img src="/post/tidytuesday-week52_files/figure-html/unnamed-chunk-24-1.png" width="288" style="display: block; margin: auto;" /></p>
+<p><img src="/post/2021-01-04-tidytuesday-2020-week52/index.en_files/figure-html/unnamed-chunk-24-1.png" width="288" style="display: block; margin: auto;" /></p>
 <p>A few countries have rather recent data points only. Let’s highlight only those countries with more than 9 entries.</p>
 <pre class="r"><code>many_entries &lt;- data_tt %&gt;% 
   group_by(name) %&gt;% 
@@ -791,7 +801,7 @@ d %&gt;%
   arrange(desc(order)) %&gt;% 
   pull(area_plots) %&gt;% 
   wrap_plots(ncol = 7)</code></pre>
-<p><img src="/post/tidytuesday-week52_files/figure-html/unnamed-chunk-28-1.png" width="960" style="display: block; margin: auto;" /></p>
+<p><img src="/post/2021-01-04-tidytuesday-2020-week52/index.en_files/figure-html/unnamed-chunk-28-1.png" width="960" style="display: block; margin: auto;" /></p>
 <p>This is a nice illustration! A bit busy right here, of course, but each panel would suite a cell in an HTML table very nicely. Also, ideally we would like to effectively visualize these graphs for all raw and adjusted comparisons (all countries versus USD, EURO, BGP, JPY and CNY), but this way would be slightly complex here.</p>
 </div>
 </div>
@@ -799,5 +809,4 @@ d %&gt;%
 <div id="in-summary" class="section level2">
 <h2>In summary</h2>
 <p>In summary, we went through a few illustrations from based on the Economist data set and application.</p>
-<hr />
 </div>
