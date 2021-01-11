@@ -28,20 +28,8 @@ knitr::opts_chunk$set(
   echo = TRUE, 
   message = FALSE, 
   warning = FALSE, 
-	fig.align = "center", 
-	fig.width = 2.3, 
-	fig.height = 2
+	fig.align = "center"
 )
-
-# To keep figure, in the specific chunk: 
-# 1. Give it a name, 
-# 2. Adjust width and height, and 
-# 3. And add this to the chunk: opts.label="keep_fig"
-knitr::opts_template$set(
-  keep_fig = list(
-    fig.path = "../results/figures/", 
-    fig.keep = "all", 
-    dpi = 400))
 ```
 
 
@@ -235,3 +223,8 @@ transit_map
 ```
 
 This is very nice for interactive visualization of the worldwide distribution of completed, ongoing and planned transit projects. 
+
+
+I was limited on time this week and so the exploration ends here.  
+
+- Jacob
