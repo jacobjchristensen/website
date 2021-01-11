@@ -1,0 +1,549 @@
+---
+title: Tidytuesday week 2, 2021
+author: Jacob
+date: '2021-01-11'
+slug: []
+categories:
+  - data science
+  - data visualizations
+  - R
+  - tidytuesday
+tags: []
+subtitle: ''
+summary: ''
+authors: []
+lastmod: '2021-01-11T10:14:33+01:00'
+featured: no
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: no
+projects: []
+---
+
+<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
+<link href="/rmarkdown-libs/anchor-sections/anchor-sections.css" rel="stylesheet" />
+<script src="/rmarkdown-libs/anchor-sections/anchor-sections.js"></script>
+<script src="/rmarkdown-libs/htmlwidgets/htmlwidgets.js"></script>
+<script src="/rmarkdown-libs/jquery/jquery.min.js"></script>
+<link href="/rmarkdown-libs/leaflet/leaflet.css" rel="stylesheet" />
+<script src="/rmarkdown-libs/leaflet/leaflet.js"></script>
+<link href="/rmarkdown-libs/leafletfix/leafletfix.css" rel="stylesheet" />
+<script src="/rmarkdown-libs/Proj4Leaflet/proj4-compressed.js"></script>
+<script src="/rmarkdown-libs/Proj4Leaflet/proj4leaflet.js"></script>
+<link href="/rmarkdown-libs/rstudio_leaflet/rstudio_leaflet.css" rel="stylesheet" />
+<script src="/rmarkdown-libs/leaflet-binding/leaflet.js"></script>
+<script src="/rmarkdown-libs/leaflet-providers/leaflet-providers_1.9.0.js"></script>
+<script src="/rmarkdown-libs/leaflet-providers-plugin/leaflet-providers-plugin.js"></script>
+<link href="/rmarkdown-libs/leaflet-markercluster/MarkerCluster.css" rel="stylesheet" />
+<link href="/rmarkdown-libs/leaflet-markercluster/MarkerCluster.Default.css" rel="stylesheet" />
+<script src="/rmarkdown-libs/leaflet-markercluster/leaflet.markercluster.js"></script>
+<script src="/rmarkdown-libs/leaflet-markercluster/leaflet.markercluster.freezable.js"></script>
+<script src="/rmarkdown-libs/leaflet-markercluster/leaflet.markercluster.layersupport.js"></script>
+
+
+<p><strong>Transit Costs Project</strong></p>
+<blockquote>
+<p>The data this week comes from <a href="https://transitcosts.com/">Transit Costs Project</a>.</p>
+</blockquote>
+<blockquote>
+<p>Why do transit-infrastructure projects in New York cost 20 times more on a per kilometer basis than in Seoul? We investigate this question across hundreds of transit projects from around the world. We have created a database that spans more than 50 countries and totals more than 11,000 km of urban rail built since the late 1990s. We will also examine this question in greater detail by carrying out six in-depth case studies that take a closer look at unique considerations and variables that aren’t easily quantified, like project management, governance, and site conditions.</p>
+</blockquote>
+<blockquote>
+<p>The goal of this work is to figure out how to deliver more high-capacity transit projects for a fraction of the cost in countries like the United States. Additionally, we hope that our site will be a useful resource for elected officials, planners, researchers, journalists, advocates, and others interested in contextualizing transit-infrastructure costs and fighting for better projects.</p>
+</blockquote>
+<div id="pre-work" class="section level2">
+<h2>Pre-work</h2>
+<ul>
+<li>Load necessary <em>libraries</em>,</li>
+<li>Set the ggplot2 <em>theme</em> to a type that is a bit more publication-ready.</li>
+</ul>
+<pre class="r"><code># Load libraries
+library(tidyverse)
+library(tidytuesdayR)
+library(rvest)
+library(skimr)
+library(countrycode)
+library(maps)
+library(leaflet)
+library(htmlwidgets)
+
+# Set project theme
+theme_set(theme_minimal() + theme(axis.line = element_line()))</code></pre>
+</div>
+<div id="get-data" class="section level2">
+<h2>Get data</h2>
+<p>Start by retrieving the data from <a href="https://github.com/rfordatascience/tidytuesday/blob/master/data/2021/2021-01-05">the Tidytuesday repo</a>.</p>
+<pre class="r"><code>tuesdata &lt;- tt_load(2021, week = 2)</code></pre>
+<pre><code>## 
+##  Downloading file 1 of 1: `transit_cost.csv`</code></pre>
+<pre class="r"><code>data_transit_cost &lt;- tuesdata$transit_cost %&gt;% 
+  filter(!is.na(country)) %&gt;% 
+  mutate(country = if_else(country == &quot;UK&quot;, true = &quot;GB&quot;, false = country), 
+         across(ends_with(&quot;_year&quot;), as.numeric))</code></pre>
+<p>Get the data dictionary too.</p>
+<pre class="r"><code>anno_transit_cost &lt;- &quot;https://github.com/rfordatascience/tidytuesday/tree/master/data/2021/2021-01-05/&quot; %&gt;%
+  read_html() %&gt;% 
+  html_nodes(&quot;table&quot;) %&gt;%
+  html_table() %&gt;% 
+  .[[1]] %&gt;% 
+  select(-class)</code></pre>
+<p>These are the available variables.</p>
+<pre class="r"><code>anno_transit_cost</code></pre>
+<pre><code>##            variable
+## 1                 e
+## 2           country
+## 3              city
+## 4              line
+## 5        start_year
+## 6          end_year
+## 7                rr
+## 8            length
+## 9        tunnel_per
+## 10           tunnel
+## 11         stations
+## 12          source1
+## 13             cost
+## 14         currency
+## 15             year
+## 16         ppp_rate
+## 17        real_cost
+## 18 cost_km_millions
+## 19          source2
+## 20        reference
+##                                                                                  description
+## 1                                                                                         ID
+## 2                          Country Code - can be joined against countrycode via ecb or iso2c
+## 3                                                 City where transit tunnel is being created
+## 4                                                                          Line name or path
+## 5                                                                               Year started
+## 6                                                           Year ended (predicted or actual)
+## 7                                    I think this is Railroad (0 or 1), where 1 == Railroad?
+## 8                                                              Length of proposed line in km
+## 9                                                           Percent of line length completed
+## 10 Tunnel length of line completed in km (can take this divided by length to get tunnel_per)
+## 11                                       Number of stations where passengers can board/leave
+## 12                                                                    Where was data sourced
+## 13                                                        Cost in millions of local currency
+## 14                                                                             Currency type
+## 15                                                             Midpoint year of construction
+## 16                      purchasing power parity (PPP), based on the midpoint of construction
+## 17                                                              Real cost in Millions of USD
+## 18                                                                Cost/km in millions of USD
+## 19                                                           Where was data sourced for cost
+## 20                                                                  Reference URL for source</code></pre>
+</div>
+<div id="overview" class="section level2">
+<h2>Overview</h2>
+<p>This is a quick overview of the data set.</p>
+<pre class="r"><code>skim(data_transit_cost)</code></pre>
+<table>
+<caption><span id="tab:unnamed-chunk-5">Table 1: </span>Data summary</caption>
+<tbody>
+<tr class="odd">
+<td align="left">Name</td>
+<td align="left">data_transit_cost</td>
+</tr>
+<tr class="even">
+<td align="left">Number of rows</td>
+<td align="left">537</td>
+</tr>
+<tr class="odd">
+<td align="left">Number of columns</td>
+<td align="left">20</td>
+</tr>
+<tr class="even">
+<td align="left">_______________________</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">Column type frequency:</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">character</td>
+<td align="left">9</td>
+</tr>
+<tr class="odd">
+<td align="left">numeric</td>
+<td align="left">11</td>
+</tr>
+<tr class="even">
+<td align="left">________________________</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">Group variables</td>
+<td align="left">None</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: character</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">skim_variable</th>
+<th align="right">n_missing</th>
+<th align="right">complete_rate</th>
+<th align="right">min</th>
+<th align="right">max</th>
+<th align="right">empty</th>
+<th align="right">n_unique</th>
+<th align="right">whitespace</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">country</td>
+<td align="right">0</td>
+<td align="right">1.00</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">0</td>
+<td align="right">56</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">city</td>
+<td align="right">0</td>
+<td align="right">1.00</td>
+<td align="right">4</td>
+<td align="right">16</td>
+<td align="right">0</td>
+<td align="right">140</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">line</td>
+<td align="right">0</td>
+<td align="right">1.00</td>
+<td align="right">2</td>
+<td align="right">46</td>
+<td align="right">0</td>
+<td align="right">366</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">tunnel_per</td>
+<td align="right">25</td>
+<td align="right">0.95</td>
+<td align="right">5</td>
+<td align="right">7</td>
+<td align="right">0</td>
+<td align="right">134</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">source1</td>
+<td align="right">5</td>
+<td align="right">0.99</td>
+<td align="right">4</td>
+<td align="right">54</td>
+<td align="right">0</td>
+<td align="right">17</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">currency</td>
+<td align="right">0</td>
+<td align="right">1.00</td>
+<td align="right">2</td>
+<td align="right">3</td>
+<td align="right">0</td>
+<td align="right">39</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">real_cost</td>
+<td align="right">0</td>
+<td align="right">1.00</td>
+<td align="right">1</td>
+<td align="right">10</td>
+<td align="right">0</td>
+<td align="right">527</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">source2</td>
+<td align="right">7</td>
+<td align="right">0.99</td>
+<td align="right">3</td>
+<td align="right">16</td>
+<td align="right">0</td>
+<td align="right">8</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">reference</td>
+<td align="right">12</td>
+<td align="right">0.98</td>
+<td align="right">3</td>
+<td align="right">302</td>
+<td align="right">0</td>
+<td align="right">350</td>
+<td align="right">0</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: numeric</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">skim_variable</th>
+<th align="right">n_missing</th>
+<th align="right">complete_rate</th>
+<th align="right">mean</th>
+<th align="right">sd</th>
+<th align="right">p0</th>
+<th align="right">p25</th>
+<th align="right">p50</th>
+<th align="right">p75</th>
+<th align="right">p100</th>
+<th align="left">hist</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">e</td>
+<td align="right">0</td>
+<td align="right">1.00</td>
+<td align="right">7738.76</td>
+<td align="right">463.23</td>
+<td align="right">7136.00</td>
+<td align="right">7403.00</td>
+<td align="right">7705.00</td>
+<td align="right">7977.00</td>
+<td align="right">9510.00</td>
+<td align="left">▇▇▂▁▁</td>
+</tr>
+<tr class="even">
+<td align="left">start_year</td>
+<td align="right">60</td>
+<td align="right">0.89</td>
+<td align="right">2013.19</td>
+<td align="right">6.74</td>
+<td align="right">1982.00</td>
+<td align="right">2010.00</td>
+<td align="right">2015.00</td>
+<td align="right">2018.00</td>
+<td align="right">2025.00</td>
+<td align="left">▁▁▂▇▇</td>
+</tr>
+<tr class="odd">
+<td align="left">end_year</td>
+<td align="right">67</td>
+<td align="right">0.88</td>
+<td align="right">2018.87</td>
+<td align="right">6.37</td>
+<td align="right">1987.00</td>
+<td align="right">2016.00</td>
+<td align="right">2020.00</td>
+<td align="right">2023.00</td>
+<td align="right">2030.00</td>
+<td align="left">▁▁▂▇▆</td>
+</tr>
+<tr class="even">
+<td align="left">rr</td>
+<td align="right">1</td>
+<td align="right">1.00</td>
+<td align="right">0.06</td>
+<td align="right">0.24</td>
+<td align="right">0.00</td>
+<td align="right">0.00</td>
+<td align="right">0.00</td>
+<td align="right">0.00</td>
+<td align="right">1.00</td>
+<td align="left">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td align="left">length</td>
+<td align="right">0</td>
+<td align="right">1.00</td>
+<td align="right">21.46</td>
+<td align="right">22.62</td>
+<td align="right">0.60</td>
+<td align="right">6.50</td>
+<td align="right">15.70</td>
+<td align="right">28.85</td>
+<td align="right">200.00</td>
+<td align="left">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td align="left">tunnel</td>
+<td align="right">26</td>
+<td align="right">0.95</td>
+<td align="right">14.19</td>
+<td align="right">15.70</td>
+<td align="right">0.00</td>
+<td align="right">3.40</td>
+<td align="right">8.90</td>
+<td align="right">21.45</td>
+<td align="right">160.00</td>
+<td align="left">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td align="left">stations</td>
+<td align="right">8</td>
+<td align="right">0.99</td>
+<td align="right">13.81</td>
+<td align="right">13.70</td>
+<td align="right">0.00</td>
+<td align="right">4.00</td>
+<td align="right">10.00</td>
+<td align="right">20.00</td>
+<td align="right">128.00</td>
+<td align="left">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td align="left">cost</td>
+<td align="right">0</td>
+<td align="right">1.00</td>
+<td align="right">805438.12</td>
+<td align="right">6708033.07</td>
+<td align="right">0.00</td>
+<td align="right">2289.00</td>
+<td align="right">11000.00</td>
+<td align="right">27000.00</td>
+<td align="right">90000000.00</td>
+<td align="left">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td align="left">year</td>
+<td align="right">0</td>
+<td align="right">1.00</td>
+<td align="right">2014.91</td>
+<td align="right">5.64</td>
+<td align="right">1987.00</td>
+<td align="right">2012.00</td>
+<td align="right">2016.00</td>
+<td align="right">2019.00</td>
+<td align="right">2027.00</td>
+<td align="left">▁▁▂▇▂</td>
+</tr>
+<tr class="even">
+<td align="left">ppp_rate</td>
+<td align="right">2</td>
+<td align="right">1.00</td>
+<td align="right">0.66</td>
+<td align="right">0.87</td>
+<td align="right">0.00</td>
+<td align="right">0.24</td>
+<td align="right">0.26</td>
+<td align="right">1.00</td>
+<td align="right">5.00</td>
+<td align="left">▇▂▁▁▁</td>
+</tr>
+<tr class="odd">
+<td align="left">cost_km_millions</td>
+<td align="right">2</td>
+<td align="right">1.00</td>
+<td align="right">233.00</td>
+<td align="right">258.26</td>
+<td align="right">7.79</td>
+<td align="right">134.86</td>
+<td align="right">181.16</td>
+<td align="right">240.76</td>
+<td align="right">3928.57</td>
+<td align="left">▇▁▁▁▁</td>
+</tr>
+</tbody>
+</table>
+<p><em>544</em> entries and <em>20</em> variables, 11 of which are text and 9 of which are numeric.</p>
+</div>
+<div id="extra-information" class="section level2">
+<h2>Extra information</h2>
+<p>Let’s add the following:</p>
+<ul>
+<li>Proper country names</li>
+<li>Other country-level data, such as continent ++</li>
+<li>Geo codes (to allow plotting cities on a map).</li>
+</ul>
+<div id="country-level-data" class="section level3">
+<h3>Country-level data</h3>
+<p>Add country name, continent, and various regional categories.</p>
+<pre class="r"><code>countries_info &lt;- countrycode::codelist_panel %&gt;% 
+  select(year, ecb, country.name.en, continent, eurocontrol_statfor, region, region23) %&gt;% 
+  group_by(ecb) %&gt;% 
+  arrange(desc(year)) %&gt;% 
+  slice(1) %&gt;% 
+  ungroup() %&gt;% 
+  select(-year)
+
+data_transit_cost &lt;- data_transit_cost %&gt;% 
+  left_join(countries_info, by = c(&quot;country&quot; = &quot;ecb&quot;)) %&gt;% 
+  filter(!is.na(continent))</code></pre>
+</div>
+<div id="geo-codes" class="section level3">
+<h3>Geo codes</h3>
+<p>Add geo codes. The <code>maps::world.cities</code> data frame is slightly old, but probably still useful for this exercise. Check first which cities are missing.</p>
+<pre class="r"><code>missing_entries &lt;- data_transit_cost %&gt;% 
+  select(country, city, country.name.en) %&gt;% 
+  anti_join(maps::world.cities, by = c(&quot;city&quot; = &quot;name&quot;)) %&gt;%
+  distinct() %&gt;% 
+  pull(city)
+
+missing_entries</code></pre>
+<pre><code>##  [1] &quot;Hanoi&quot;       &quot;Seoul&quot;       &quot;Mumbai&quot;      &quot;Busan&quot;       &quot;Panama City&quot;
+##  [6] &quot;Tel Aviv&quot;    &quot;Seville&quot;     &quot;Lucerne&quot;     &quot;Kyiv&quot;        &quot;Xi&#39;an&quot;      
+## [11] &quot;Jeddah&quot;      &quot;Ad Dammam&quot;   &quot;Bahrain&quot;     &quot;Kuwait City&quot;</code></pre>
+<p>Okay, so a few missing. Change these cities to their old names.</p>
+<pre class="r"><code>data_transit_cost &lt;- data_transit_cost %&gt;% 
+  mutate(city = case_when(
+    city == &quot;Hanoi&quot; ~ &quot;Ha Noi&quot;, 
+    city == &quot;Seoul&quot; ~ &quot;Soul&quot;, 
+    city == &quot;Mumbai&quot; ~ &quot;Bombay&quot;, 
+    city == &quot;Busan&quot; ~ &quot;Pusan&quot;, 
+    city == &quot;Panama City&quot; ~ &quot;Panama&quot;, 
+    city == &quot;Tel Aviv&quot; ~ &quot;Tel Aviv-Yafo&quot;, 
+    city == &quot;Seville&quot; ~ &quot;Sevilla&quot;, 
+    city == &quot;Lucerne&quot; ~ &quot;Luzern&quot;, 
+    city == &quot;Kyiv&quot; ~ &quot;Kiev&quot;, 
+    city == &quot;Xi&#39;an&quot; ~ &quot;Xian&quot;, 
+    city == &quot;Jeddah&quot; ~ &quot;Jiddah&quot;, 
+    city == &quot;Ad Dammam&quot; ~ &quot;ad-Dammam&quot;, 
+    city == &quot;Bahrain&quot; ~ &quot;Manama&quot;, 
+    city == &quot;Kuwait City&quot; ~ &quot;al-Kuwayt&quot;, 
+    TRUE ~ city
+  ))</code></pre>
+<p>Then check which country names that don’t match up.</p>
+<pre class="r"><code>missing_entries &lt;- data_transit_cost %&gt;% 
+  select(country, city, country.name.en) %&gt;% 
+  anti_join(maps::world.cities, by = c(&quot;country.name.en&quot; = &quot;country.etc&quot;)) %&gt;%
+  pull(country.name.en) %&gt;% 
+  unique()
+
+missing_entries</code></pre>
+<pre><code>## [1] &quot;United States&quot;  &quot;Czechia&quot;        &quot;United Kingdom&quot; &quot;South Korea&quot;</code></pre>
+<p>Change these to their old names.</p>
+<pre class="r"><code>data_transit_cost &lt;- data_transit_cost %&gt;% 
+  mutate(country.name.en = case_when(
+    country.name.en == &quot;United States&quot; ~ &quot;USA&quot;, 
+    country.name.en == &quot;Czechia&quot; ~ &quot;Czech Republic&quot;, 
+    country.name.en == &quot;United Kingdom&quot; ~ &quot;UK&quot;, 
+    country.name.en == &quot;South Korea&quot; ~ &quot;Korea South&quot;, 
+    TRUE ~ country.name.en
+  ))</code></pre>
+<p>Add longitude and latitude for (almost) all cities, and add the English name of the country.</p>
+<pre class="r"><code>data_transit_cost &lt;- data_transit_cost %&gt;% 
+  left_join(maps::world.cities, by = c(&quot;city&quot; = &quot;name&quot;, &quot;country.name.en&quot; = &quot;country.etc&quot;))</code></pre>
+</div>
+</div>
+<div id="leaflet-map" class="section level2">
+<h2><code>leaflet</code> map</h2>
+<p>Let’s create <a href="https://rstudio.github.io/leaflet/">a leaflet map</a> of all transit project sites.</p>
+<p>Then make the leaflet plot and add all bubble plots on top.</p>
+<pre class="r"><code>transit_map &lt;- data_transit_cost %&gt;% 
+  leaflet() %&gt;%
+  addProviderTiles(providers$OpenStreetMap) %&gt;%
+  addCircleMarkers(lng = ~long, 
+             lat = ~lat, 
+             popup = ~line,
+             label = ~line, 
+             clusterOptions = markerClusterOptions()
+             )
+
+transit_map</code></pre>
+<div id="htmlwidget-1" style="width:220.8px;height:192px;" class="leaflet html-widget"></div>
+<script type="application/json" data-for="htmlwidget-1">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addProviderTiles","args":["OpenStreetMap",null,null,{"errorTileUrl":"","noWrap":false,"detectRetina":false}]},{"method":"addCircleMarkers","args":[[49.28,43.65,43.65,43.65,43.65,52.37,45.52,47.62,34.11,34.11,34.11,34.11,37.77,42.34,45.42,37.3,42.69,42.69,42.69,42.69,42.69,42.69,52.26,52.26,52.26,52.26,44.44,55.75,56.33,59.93,59.93,55.75,50.08,47.51,43.62,45.08,45.08,45.08,60.17,60.17,59.33,59.33,59.33,59.33,55.61,51.52,19.43,25.02,45.48,45.48,45.48,48.86,45.48,21.03,21.03,37.56,37.56,20.67,51.35,41.89,41.89,41.89,41.89,52.52,52.52,50.83,55.68,59.91,59.91,-33.87,-33.87,-37.81,1.3,1.3,43.65,18.96,18.96,18.96,18.96,18.96,18.96,18.96,18.96,18.96,18.96,18.96,18.96,18.96,37.98,37.98,40.64,40.64,35.11,37.56,37.56,37.56,1.3,48.86,48.86,51.52,-33.46,-33.46,-23.53,-12.97,8.97,8.97,8.97,14.62,14.62,14.62,14.62,48.22,48.22,48.22,10.02,28.67,28.67,28.67,35.67,35.67,35.67,40.42,40.42,38.72,41.15,40.42,40.42,40.42,-0.19,40.42,48.86,43.65,45.52,49,51.24,40.67,40.67,40.67,40.67,40.67,51.52,48.86,48.86,48.86,48.86,48.86,48.86,48.86,32.07,32.07,-36.85,53.55,53.55,53.55,41.4,41.4,41.4,41.4,41.4,41.4,43.25,37.4,36.72,23.7,23.7,23.7,-6.18,45.76,45.76,45.76,31.56,13.73,13.73,13.73,13.73,13.73,13.73,13.73,18.8,10.78,10.78,10.78,34.68,34.68,34.68,35.67,35.67,35.67,35.67,35.67,35.67,35.67,35.67,35.67,33.59,-23.53,47.06,47.38,35.67,12.97,12.97,28.47,28.47,21.16,21.16,23.03,17.4,17.4,13.09,13.09,13.09,46.21,50.43,50.43,49.98,25.02,25.02,25.02,25.02,25.02,25.02,25.02,22.63,22.63,23,24.15,-31.96,35.67,-34.61,49.45,50.95,52.52,52.52,50.12,52.34,-12.07,3.16,3.16,41.1,41.1,41.1,41.1,41.1,41.1,41.1,41.1,38.43,38.43,38.43,39.93,40.2,39.93,39.93,31.23,31.23,31.23,31.23,31.23,31.23,31.23,31.23,31.23,31.23,31.23,31.23,31.23,34.27,34.27,34.27,34.27,22.53,22.53,22.53,22.53,22.53,22.53,22.53,22.53,22.53,22.53,22.53,30.25,32.05,30.58,30.58,30.58,31.85,31.85,31.85,31.85,31.85,31.85,25.05,31.23,31.23,39.93,30.58,31.23,31.23,31.23,39.93,31.23,22.53,39.93,39.93,23.12,23.12,22.53,39.93,30.67,39.13,39.93,39.93,39.93,39.93,39.13,39.13,30.58,28.68,30.67,39.13,22.53,23.12,39.93,30.58,30.25,31.23,39.93,32.05,39.13,22.53,39.93,28.2,32.05,30.25,30.58,28.2,28.68,24.45,32.05,30.58,32.05,23.12,30.67,22.82,31.23,23.12,39.93,23.12,30.25,24.45,34.75,34.75,26.08,32.05,28.2,30.58,29.57,39.93,34.75,43.87,30.58,32.05,22.82,32.05,26.08,30.67,39.93,28.68,34.27,30.25,28.2,30.25,23.12,31.3,33.64,30.25,23.12,41.8,30.67,22.82,22.82,26.58,31.85,30.25,41.8,25.05,29.57,32.05,31.85,32.05,29.57,26.08,31.23,34.75,39.93,28.2,30.58,43.87,41.8,32.05,24.45,31.85,26.58,30.67,31.85,30.58,39.13,39.93,39.93,39.93,34.27,28.2,30.67,31.3,33.64,31.3,33.64,30.25,37.87,28.2,43.87,31.3,33.64,34.27,26.58,30.58,34.75,28.2,25.05,30.25,34.75,30.67,34.75,34.27,37.87,34.27,41.8,23.12,39.93,31.23,34.27,30.58,39.13,25.05,43.87,30.25,26.58,29.57,28.2,39.93,29.57,28.2,25.05,24.45,29.57,30.58,32.05,29.57,29.57,30.58,30.58,34.27,29.57,28.68,28.2,43.87,25.05,30.58,28.2,31.23,30.58,28.68,39.93,31.23,30.58,43.87,39.13,29.57,29.57,25.05,39.93,28.2,39.93,31.23,25.05,43.87,39.93,28.02,28.02,36.05,36.05,23.05,23.05,23.05,23.05,23.05,23.05,23.05,24.65,24.65,24.65,24.65,24.65,24.65,21.5,21.43,26.43,25.3,26.21,26.21,25.27,25.27,25.27,30.06,30.06,30.06,30.06,30.06,30.06,30.06,29.38,41.31,41.31,31.23,31.23,31.23,23.12,26.58,30.58,30.67,30.67,30.67,41.1,41.1,41.1,41.1,41.1,41.1,41.1,41.31,41.31],[-123.13,-79.38,-79.38,-79.38,-79.38,4.89,-73.57,-122.35,-118.41,-118.41,-118.41,-118.41,-122.45,-71.02,-75.71,-121.85,23.31,23.31,23.31,23.31,23.31,23.31,21.02,21.02,21.02,21.02,26.1,37.62,44,30.32,30.32,37.62,14.43,19.08,1.45,7.68,7.68,7.68,24.94,24.94,18.07,18.07,18.07,18.07,13.02,-0.1,-99.14,121.45,9.19,9.19,9.19,2.34,9.19,105.84,105.84,126.99,126.99,-103.35,12.4,12.5,12.5,12.5,12.5,13.38,13.38,4.33,12.57,10.75,10.75,151.21,151.21,144.96,103.85,103.85,-79.38,72.82,72.82,72.82,72.82,72.82,72.82,72.82,72.82,72.82,72.82,72.82,72.82,72.82,23.73,23.73,22.94,22.94,129.03,126.99,126.99,126.99,103.85,2.34,2.34,-0.1,-70.64,-70.64,-46.63,-38.5,-79.53,-79.53,-79.53,120.97,120.97,120.97,120.97,16.37,16.37,16.37,76.22,77.21,77.21,77.21,51.43,51.43,51.43,-3.71,-3.71,-9.14,-8.62,-3.71,-3.71,-3.71,-78.5,-3.71,2.34,-79.38,-73.57,8.4,6.79,-73.94,-73.94,-73.94,-73.94,-73.94,-0.1,2.34,2.34,2.34,2.34,2.34,2.34,2.34,34.77,34.77,174.76,10,10,10,2.17,2.17,2.17,2.17,2.17,2.17,-2.93,-5.98,-4.42,90.39,90.39,90.39,106.83,4.83,4.83,4.83,74.35,100.5,100.5,100.5,100.5,100.5,100.5,100.5,98.98,106.69,106.69,106.69,135.5,135.5,135.5,139.77,139.77,139.77,139.77,139.77,139.77,139.77,139.77,139.77,130.41,-46.63,8.3,8.54,139.77,77.56,77.56,77.01,77.01,79.08,79.08,72.58,78.48,78.48,80.27,80.27,80.27,6.14,30.52,30.52,36.22,121.45,121.45,121.45,121.45,121.45,121.45,121.45,120.27,120.27,120.19,120.68,115.84,139.77,-58.37,11.05,6.97,13.38,13.38,8.68,14.53,-77.05,101.71,101.71,29,29,29,29,29,29,29,29,27.15,27.15,27.15,32.85,29.08,116.4,116.4,121.47,121.47,121.47,121.47,121.47,121.47,121.47,121.47,121.47,121.47,121.47,121.47,121.47,117.18,117.18,117.18,117.18,114.13,114.13,114.13,114.13,114.13,114.13,114.13,114.13,114.13,114.13,114.13,120.17,118.78,114.27,114.27,114.27,117.28,117.28,117.28,117.28,117.28,117.28,102.7,121.47,121.47,116.4,114.27,121.47,121.47,121.47,116.4,121.47,114.13,116.4,116.4,113.25,113.25,114.13,116.4,104.07,117.2,116.4,116.4,116.4,116.4,117.2,117.2,114.27,115.88,104.07,117.2,114.13,113.25,116.4,114.27,120.17,121.47,116.4,118.78,117.2,114.13,116.4,112.97,118.78,120.17,114.27,112.97,115.88,118.08,118.78,114.27,118.78,113.25,104.07,108.32,121.47,113.25,116.4,113.25,120.17,118.08,113.67,113.67,119.3,118.78,112.97,114.27,106.58,116.4,113.67,125.35,114.27,118.78,108.32,118.78,119.3,104.07,116.4,115.88,108.9,120.17,112.97,120.17,113.25,120.62,117,120.17,113.25,123.45,104.07,108.32,108.32,106.72,117.28,120.17,123.45,102.7,106.58,118.78,117.28,118.78,106.58,119.3,121.47,113.67,116.4,112.97,114.27,125.35,123.45,118.78,118.08,117.28,106.72,104.07,117.28,114.27,117.2,116.4,116.4,116.4,108.9,112.97,104.07,120.62,117,120.62,117,120.17,112.55,112.97,125.35,120.62,117,108.9,106.72,114.27,113.67,112.97,102.7,120.17,113.67,104.07,113.67,108.9,112.55,108.9,123.45,113.25,116.4,121.47,108.9,114.27,117.2,102.7,125.35,120.17,106.72,106.58,112.97,116.4,106.58,112.97,102.7,118.08,106.58,114.27,118.78,106.58,106.58,114.27,114.27,108.9,106.58,115.88,112.97,125.35,102.7,114.27,112.97,121.47,114.27,115.88,116.4,121.47,114.27,125.35,117.2,106.58,106.58,102.7,116.4,112.97,116.4,121.47,102.7,125.35,116.4,120.65,120.65,103.68,103.68,113.73,113.73,113.73,113.73,113.73,113.73,113.73,46.77,46.77,46.77,46.77,46.77,46.77,39.17,39.82,50.1,51.51,50.58,50.58,55.33,55.33,55.33,31.25,31.25,31.25,31.25,31.25,31.25,31.25,47.99,69.3,69.3,121.47,121.47,121.47,113.25,106.72,114.27,104.07,104.07,104.07,29,29,29,29,29,29,29,69.3,69.3],10,null,null,{"interactive":true,"className":"","stroke":true,"color":"#03F","weight":5,"opacity":0.5,"fill":true,"fillColor":"#03F","fillOpacity":0.2},{"showCoverageOnHover":true,"zoomToBoundsOnClick":true,"spiderfyOnMaxZoom":true,"removeOutsideVisibleBounds":true,"spiderLegPolylineOptions":{"weight":1.5,"color":"#222","opacity":0.5},"freezeAtZoom":false},null,["Broadway","Vaughan","Scarborough","Ontario","Yonge to Richmond Hill","North-South","Blue Line extension","U-Link","Purple Phase 3","Purple Phase 2","Purple Phase 1","Regional Connector","Central Subway","Green Line Extension","Confederation","BART","Line 1 northern","Line 1 southern","Line 2","Line 2 extension","Line 3","Line 3 extension (Third Stage)","Line 2","Line 2 extension to Trocka","Line 2 extenision to KJ","Line 2 extension to Bródno","Line 5","Line 11","Line 2 extension","Line 3 extension","Line 5 extension","Line 1 extension","Line A extension","Line 4","Line 3","Line 1 phases 1-3","Line 1 south (phase 4)","Line 1 west (phase 5)","West Metro","Ring Rail Line","Arenastaden","Nacka/Söderort","Barkarby","Citybanan","Citytunneln","Northern Line Extension","Line 12","Wanda Line Phase 2","Line 5 phase 1","Line 5 phase 2","Line 4","GPX","Passante Railway","Line 3","Line 2","Sinbundang","Sinbundang phase 2","Line 3","City Tunnel","Line B1 extension","Line C - section T6a","Line C - section T4-5","Line C - section T3","U55","U5-U55 connection","Line 3","City Circle Line","Løren Line","Fornebu Line","Metro City & SW","Metro NW","Metro Tunnel","Downtown MRT Line","Thomson MRT Line","Eglinton Crosstown","Monorail","Line 3","Line 2A","Line 2B","Line 4","Line 4A","Line 5","Line 6","Line 7","Line 7A + 9","Line 10","Line 11","Line 12","Line 4","Line 3 to Piraeus","Main line","Kalamaria Extension","Line 1 extension","Gimpo Urban Railway","Line 7 extension","2020s program","Circle Line Stage 6","Line 12 to Aubervilliers","Line 1 extension","Jubilee line extension","Line 7","Project 63","Line 5 extension","Lines 1-2","Line 1","Line 2","Line 3","Line 9","Line 7","Line 5","Line 4","Line 2 extension","Line 1 extension","U2/U5 cross","Metro","Phase 3","Phase 4 first half","Phase 4 second half","Line 3 extension to SW","Line 6","Line 7","1995-98 program","1999-2003 program","Circular line","Pink line, yellow line","Eje Transversal","Line 2 extension","Line 9 extension","Metro","Chamartin-Atocha tunnel","Line 14","Sheppard","Laval extension","Kombilösung","Wehrhahn Line","7 extension","Second Avenue Phase 1","Second Avenue Phase 2","East Side Access","Gateway","Crossrail","Line 4 to Bagneux","RER E extension","Line 4 to Montrouge","Line 8 to Pointe-du-Lac","Line 13 to Courtilles","Line 12 to Front Populaire","Line 11","Red Line","Green Line","City Rail Link","U4 to HafenCity U","U4 to Elbbrücken","U4 to Dannerallee","L3 to Trinitat Nova","Terrassa tunnel","Sabadell tunnel","L2 to Badalona","L5 to Vall d'Hebron","L9/10","Line 3","Line 1","Lines 1-2","Line 6","Line 1","Line 5","MRT first phase","Line A to Vaulx","Line B to Oullins","Line B to Hospital-Sud","Orange Line","Sukhumvit Line to Kheka","Sukhumvit Line to Khu Khot","Blue Line extension","Brown Line","Pink Line","Yellow Line","Orange Line","Red Line","Line 1","Line 2 first phase","Line 5 first phase","Tokaido branch relocation","Higashi Line","Monorail extension","Fukutoshin Line","Minatomirai Line","Oedo Line ring","Haneda express line","Tama Monorail first phase","Monorail to Tokyo Station","Tokyo-Ueno Line","Sotetsu Shin-Yokohama JR Line","Sotetsu Shin-Yokohama Tokyu Line","Nanakuma Line extension","Line 6 phase 1","Zentralbahn","Durchmesserlinie","Tsukuba Express","Phase 2","Phase 1","Phase 1","Phase 2","Phase 1","Phase 2","Phase 1","Phase 1","Airport express","Phase 1","Phase 1 extension","Phase 2","CEVA","M3 to Vynohradar","M4","M3 extension","Sanying Line","Danhai LRT","Circular Line first section","Airport MRT","Taoyuan MRT Green Line","Taoyuan MRT Brown Line","Taoyuan Underground","Red and Orange Lines","Urban Railway Underground","Underground Project","Green Line","Forrestfield-Airport Link","Yurikamome","RER","U3 extension","North-South Stadtbahn","U8 to Wittenau","U2 to Pankow","U-Bahn Europaviertel","U-Bahn Europaviertel","Line 2","Kajang Line","Putrajaya Line (MRT 2)","M2-M6","M3 Phase 1","M4 Phase 1","M4 Phase 2","M5 Phase 1","BC1","CR3","M7 Phase1-2","M1 Phase 1","M1 Phase 2","M1 Phase 3","M4","Bursaray","Line 4","Line 13","Line 2 Eastern Extension 1","Line 2 Western Extension 1","Line 2 Eastern Extension 2","Line 3","Line 5 Phase 1","Line 5 Southern Extension","Line 7 Phase 1","Line 7 Northern Extension","Line 9 Phase 2","Line 9 Phase 3","Line 9 Phase 3 Eastern Extension","Line 10 Phase 1","Line 11 Phase 1","Line 3 Phase 2","Line 4 Phase 1","Line 5 Phase 1","Line 6 Phase 1","Line 6 Phase 1","Line 6 (feeder)","Line 3 Phase 4","Line 12 Phase 2","Line 13 Northern Extension","Line 13 Southern Extension","Line 16 Phase 2","Line 7 Phase 2","Line 8 Phase 3","Line 11 Phase 2","Line 20 Phase 1","Line 1 Phase 1","Line 1 Phase 1","Line 1 Phase 1","Line 1 Phase 2","Line 1 Phase 3 Hankou North","Line 2 Eastern Extension","Line 3 Southern Extension","Line 4 Southern Extension","Line 6 Phase 1","Line 7 Phase 1","Line 8 Phase 1","Line 1 Phase 1 and Line 2 Phase 1","Line 1 Western Extension","Line 20 Phase 1","Line 28","Line 11 Phase 3","Line 19","Line 21 Phase 1","Line 13 Western Extension","Line 11 West","Line 23 Phase 1","Line 13","Line 3 Phase 1+2","Line 12","Line 13 Phase 2","Line 10","Line 12","Line 8 Phase 4","Line 18 Phase 3","M8 Phase 1","Line 19 Phase 1","Line 17","Line 16","Line 25 Phase 2 (Fangshan Northern Extension)","M10 Phase 1","M7 Phase 1","Line 12 (Ring)","Line 2 Eastern Extension","Line 8 Phase 2","M11 Phase 1","Line 16","Line 12","Line 7 Phase 2 (Eastern Extension)","Line 2 Southern Extension","Line 9 Phase 1","Jiamin","Line 27 Phase 2 (Changping Southern Extension)","Line 5","B1 Phase 1","Line 14","Line 6 Phase 1 and 2","Line 6 Central","Line 1 Northern Extension","Line 10 Phase 1","Line 8 Phase 2","Line 7 Phase 1","Line 3","Line 6","Line 4 Phase 2","Line 19","Line 10 Phase 2","Line 14 Phase 2","Line 13 Phase 1","Line 5 Phase 1","Line 8 Phase 1","Line 22","Line 22","Line 5 Eastern Extension","Line 6 Phase 2","Line 2 Phase 2","Line 14 Phase 1","Line 6 Phase 1","Line 5 Phase 1","Line 9 Phase 1","Line 5 South Extension","Line 5","Line 5 Northern Extension","Line 13A","Line 7 Phase 1","Line 5 Phase 1","Line 11 East","Line 2 Western Extension","Line 2 Eastern Extension","Line 7","Line 4 Phase 1","Line 30 Phase 1","Line 7 Phase 1","Line 4 Phase 1","Line 8","Line 4 Phase 2","Line 6 West","Line 8 Phase 1","Line 7 Phase 2","Line 7","Line 7","Line 3 Phase 1","Line 18","Line 6 Phase 1","Line 17 Phase 2","Line 4 Phase 1","Line 3 Phase1","Line 3 Phase 1","Line 5 Phase 1","Line 1 Phase 3","Line 2 Southern Extension","Line 1 Northwestern Extension","Line 10","Line 6","Line 3 Phase 1","Line S8 Southern Extension","Line 5A","Line 6","Airport Contact Line","Line 12 Phase 1","Line 10 North and East","Line 5 Phase 1","Line 7 South","Line 7 Phase 1","Line 1 Eastern Extension","Line 11 Phase 1","Line 3 Phase 2","Line 4 Phase 1","Line 2 Phase 2","Line 10 Phase 3","Line 1 Phase 1+2","Line 4 Western Extension","Z4 Phase 1","Daxing Airport Express Phase 1","Daxing Airport Express Phase 2","Line 8 Phase 1 for Olympics","Line 1 Phase 3","Line 3 Phase 1","Line 27 Phase 1","Line 8","Line 8","Line S1","Line S1","Line 7","Line 1 Phase 1","Line 4 Phase 1","Line 6","Line 6","Line 6","Line 15 Phase 1","S2 Phase 1 North","Line 6 Phase 2","Line 10 Phase 1","Line 2 West Extension Phase 2","Line 1 Feeder","Line 2 Phase 3","Line 8 Phase 1","Line 19 Phase 2","Line 3 Phase 2","Line 2 Phase 2","Line 2 Phase 1","Line 14","Line 3 Phase 1","Line 3 Eastern Extension","Daxing Line","Chongming","Line 16 Phase 1","Xingang","Z2 Phase 1","Line 3 Phase 2","Line 2 Eastern Extension","Line 5 Phase 2","S1 Phase 1","Line 4 Phase 2","Line 2 West Extension Phase 1","Line 5","Ring Line","Line 1 North Extension Phase 1","Line 5","Line 4","Line 6 Branch (EXPO) Phase 2","Line 8 Phase 3","Line 3 Phase 3","Line 9 Phase 2","Line 9","Line 7 Northern Extension","Line 2 Northern Extension","Line 10 Phase 1","Line 4 Phase 1","Line 1 Eastern Extension","Line 6 East","Line 4 Southern Extension","Line 4","Line 21","Line 4 North Extension","Line 11 (to Disney)","Line 16","Line 2 Western Extension","Line 15 Phase 1","Line 6","Line 1 Phase 4 (Jinghe)","Line 9 (Konggang)","M3 Phase 2","Line 6 Branch (EXPO) Phase 1","Line 5 Phase 1 North","Line 6","Line 13B","Line 5 North Extension","Line 8 Northern Extension","Line 8 Phase 3 (Pujiang Line)","Line 1 Southern Extension","Line 3 Southern Extension","Capital Airport Express","S1 Phase 1","S2 Phase 1","Line 2 Phase 1","Line 1 Phase 1","Line 1 Phase 1","Line 1 Phase 2","Line 1 Phase 3","Line 1 Feeder Phase 1","Line 2 Phase 3","Line 3 Phase 1","Line 3 feeder","Blue","Red","Orange","Yellow","Green","Purple","Jeddah Metro","Mecca Metro","Dammam Metro (a-Sharqiya)","Doha Metro","Phase 1 (Red & Blue)","Phase 2","Phase 1 - Red Line","Phase 2 - Green Line","Phase 3 (Red Line Extension/Route 2020)","Line 1","Line 2","Line 3 Phase 1","Line 3 Phase 2","Line 3 Phase 3","Line 4 (4 Phases)","Line 6","Kuwait Metro","Sergeli Line","Yunusabad Line extension","Line 15","Line 14","Line 16","Line 13 Phase 1","Line 1 Phase 1","Line 4 Phase 1","Line 8 Phase 1","Line 9 Phase 1","Line 10 Phase 2","M3 Phase 2","M4 Phase 3","M8","M5 Phase 2-M13","M12","M11 Phase 1","M11 Phase 2","Sergeli Line","Yunusabad Line extension"],null,["Broadway","Vaughan","Scarborough","Ontario","Yonge to Richmond Hill","North-South","Blue Line extension","U-Link","Purple Phase 3","Purple Phase 2","Purple Phase 1","Regional Connector","Central Subway","Green Line Extension","Confederation","BART","Line 1 northern","Line 1 southern","Line 2","Line 2 extension","Line 3","Line 3 extension (Third Stage)","Line 2","Line 2 extension to Trocka","Line 2 extenision to KJ","Line 2 extension to Bródno","Line 5","Line 11","Line 2 extension","Line 3 extension","Line 5 extension","Line 1 extension","Line A extension","Line 4","Line 3","Line 1 phases 1-3","Line 1 south (phase 4)","Line 1 west (phase 5)","West Metro","Ring Rail Line","Arenastaden","Nacka/Söderort","Barkarby","Citybanan","Citytunneln","Northern Line Extension","Line 12","Wanda Line Phase 2","Line 5 phase 1","Line 5 phase 2","Line 4","GPX","Passante Railway","Line 3","Line 2","Sinbundang","Sinbundang phase 2","Line 3","City Tunnel","Line B1 extension","Line C - section T6a","Line C - section T4-5","Line C - section T3","U55","U5-U55 connection","Line 3","City Circle Line","Løren Line","Fornebu Line","Metro City &amp; SW","Metro NW","Metro Tunnel","Downtown MRT Line","Thomson MRT Line","Eglinton Crosstown","Monorail","Line 3","Line 2A","Line 2B","Line 4","Line 4A","Line 5","Line 6","Line 7","Line 7A + 9","Line 10","Line 11","Line 12","Line 4","Line 3 to Piraeus","Main line","Kalamaria Extension","Line 1 extension","Gimpo Urban Railway","Line 7 extension","2020s program","Circle Line Stage 6","Line 12 to Aubervilliers","Line 1 extension","Jubilee line extension","Line 7","Project 63","Line 5 extension","Lines 1-2","Line 1","Line 2","Line 3","Line 9","Line 7","Line 5","Line 4","Line 2 extension","Line 1 extension","U2/U5 cross","Metro","Phase 3","Phase 4 first half","Phase 4 second half","Line 3 extension to SW","Line 6","Line 7","1995-98 program","1999-2003 program","Circular line","Pink line, yellow line","Eje Transversal","Line 2 extension","Line 9 extension","Metro","Chamartin-Atocha tunnel","Line 14","Sheppard","Laval extension","Kombilösung","Wehrhahn Line","7 extension","Second Avenue Phase 1","Second Avenue Phase 2","East Side Access","Gateway","Crossrail","Line 4 to Bagneux","RER E extension","Line 4 to Montrouge","Line 8 to Pointe-du-Lac","Line 13 to Courtilles","Line 12 to Front Populaire","Line 11","Red Line","Green Line","City Rail Link","U4 to HafenCity U","U4 to Elbbrücken","U4 to Dannerallee","L3 to Trinitat Nova","Terrassa tunnel","Sabadell tunnel","L2 to Badalona","L5 to Vall d'Hebron","L9/10","Line 3","Line 1","Lines 1-2","Line 6","Line 1","Line 5","MRT first phase","Line A to Vaulx","Line B to Oullins","Line B to Hospital-Sud","Orange Line","Sukhumvit Line to Kheka","Sukhumvit Line to Khu Khot","Blue Line extension","Brown Line","Pink Line","Yellow Line","Orange Line","Red Line","Line 1","Line 2 first phase","Line 5 first phase","Tokaido branch relocation","Higashi Line","Monorail extension","Fukutoshin Line","Minatomirai Line","Oedo Line ring","Haneda express line","Tama Monorail first phase","Monorail to Tokyo Station","Tokyo-Ueno Line","Sotetsu Shin-Yokohama JR Line","Sotetsu Shin-Yokohama Tokyu Line","Nanakuma Line extension","Line 6 phase 1","Zentralbahn","Durchmesserlinie","Tsukuba Express","Phase 2","Phase 1","Phase 1","Phase 2","Phase 1","Phase 2","Phase 1","Phase 1","Airport express","Phase 1","Phase 1 extension","Phase 2","CEVA","M3 to Vynohradar","M4","M3 extension","Sanying Line","Danhai LRT","Circular Line first section","Airport MRT","Taoyuan MRT Green Line","Taoyuan MRT Brown Line","Taoyuan Underground","Red and Orange Lines","Urban Railway Underground","Underground Project","Green Line","Forrestfield-Airport Link","Yurikamome","RER","U3 extension","North-South Stadtbahn","U8 to Wittenau","U2 to Pankow","U-Bahn Europaviertel","U-Bahn Europaviertel","Line 2","Kajang Line","Putrajaya Line (MRT 2)","M2-M6","M3 Phase 1","M4 Phase 1","M4 Phase 2","M5 Phase 1","BC1","CR3","M7 Phase1-2","M1 Phase 1","M1 Phase 2","M1 Phase 3","M4","Bursaray","Line 4","Line 13","Line 2 Eastern Extension 1","Line 2 Western Extension 1","Line 2 Eastern Extension 2","Line 3","Line 5 Phase 1","Line 5 Southern Extension","Line 7 Phase 1","Line 7 Northern Extension","Line 9 Phase 2","Line 9 Phase 3","Line 9 Phase 3 Eastern Extension","Line 10 Phase 1","Line 11 Phase 1","Line 3 Phase 2","Line 4 Phase 1","Line 5 Phase 1","Line 6 Phase 1","Line 6 Phase 1","Line 6 (feeder)","Line 3 Phase 4","Line 12 Phase 2","Line 13 Northern Extension","Line 13 Southern Extension","Line 16 Phase 2","Line 7 Phase 2","Line 8 Phase 3","Line 11 Phase 2","Line 20 Phase 1","Line 1 Phase 1","Line 1 Phase 1","Line 1 Phase 1","Line 1 Phase 2","Line 1 Phase 3 Hankou North","Line 2 Eastern Extension","Line 3 Southern Extension","Line 4 Southern Extension","Line 6 Phase 1","Line 7 Phase 1","Line 8 Phase 1","Line 1 Phase 1 and Line 2 Phase 1","Line 1 Western Extension","Line 20 Phase 1","Line 28","Line 11 Phase 3","Line 19","Line 21 Phase 1","Line 13 Western Extension","Line 11 West","Line 23 Phase 1","Line 13","Line 3 Phase 1+2","Line 12","Line 13 Phase 2","Line 10","Line 12","Line 8 Phase 4","Line 18 Phase 3","M8 Phase 1","Line 19 Phase 1","Line 17","Line 16","Line 25 Phase 2 (Fangshan Northern Extension)","M10 Phase 1","M7 Phase 1","Line 12 (Ring)","Line 2 Eastern Extension","Line 8 Phase 2","M11 Phase 1","Line 16","Line 12","Line 7 Phase 2 (Eastern Extension)","Line 2 Southern Extension","Line 9 Phase 1","Jiamin","Line 27 Phase 2 (Changping Southern Extension)","Line 5","B1 Phase 1","Line 14","Line 6 Phase 1 and 2","Line 6 Central","Line 1 Northern Extension","Line 10 Phase 1","Line 8 Phase 2","Line 7 Phase 1","Line 3","Line 6","Line 4 Phase 2","Line 19","Line 10 Phase 2","Line 14 Phase 2","Line 13 Phase 1","Line 5 Phase 1","Line 8 Phase 1","Line 22","Line 22","Line 5 Eastern Extension","Line 6 Phase 2","Line 2 Phase 2","Line 14 Phase 1","Line 6 Phase 1","Line 5 Phase 1","Line 9 Phase 1","Line 5 South Extension","Line 5","Line 5 Northern Extension","Line 13A","Line 7 Phase 1","Line 5 Phase 1","Line 11 East","Line 2 Western Extension","Line 2 Eastern Extension","Line 7","Line 4 Phase 1","Line 30 Phase 1","Line 7 Phase 1","Line 4 Phase 1","Line 8","Line 4 Phase 2","Line 6 West","Line 8 Phase 1","Line 7 Phase 2","Line 7","Line 7","Line 3 Phase 1","Line 18","Line 6 Phase 1","Line 17 Phase 2","Line 4 Phase 1","Line 3 Phase1","Line 3 Phase 1","Line 5 Phase 1","Line 1 Phase 3","Line 2 Southern Extension","Line 1 Northwestern Extension","Line 10","Line 6","Line 3 Phase 1","Line S8 Southern Extension","Line 5A","Line 6","Airport Contact Line","Line 12 Phase 1","Line 10 North and East","Line 5 Phase 1","Line 7 South","Line 7 Phase 1","Line 1 Eastern Extension","Line 11 Phase 1","Line 3 Phase 2","Line 4 Phase 1","Line 2 Phase 2","Line 10 Phase 3","Line 1 Phase 1+2","Line 4 Western Extension","Z4 Phase 1","Daxing Airport Express Phase 1","Daxing Airport Express Phase 2","Line 8 Phase 1 for Olympics","Line 1 Phase 3","Line 3 Phase 1","Line 27 Phase 1","Line 8","Line 8","Line S1","Line S1","Line 7","Line 1 Phase 1","Line 4 Phase 1","Line 6","Line 6","Line 6","Line 15 Phase 1","S2 Phase 1 North","Line 6 Phase 2","Line 10 Phase 1","Line 2 West Extension Phase 2","Line 1 Feeder","Line 2 Phase 3","Line 8 Phase 1","Line 19 Phase 2","Line 3 Phase 2","Line 2 Phase 2","Line 2 Phase 1","Line 14","Line 3 Phase 1","Line 3 Eastern Extension","Daxing Line","Chongming","Line 16 Phase 1","Xingang","Z2 Phase 1","Line 3 Phase 2","Line 2 Eastern Extension","Line 5 Phase 2","S1 Phase 1","Line 4 Phase 2","Line 2 West Extension Phase 1","Line 5","Ring Line","Line 1 North Extension Phase 1","Line 5","Line 4","Line 6 Branch (EXPO) Phase 2","Line 8 Phase 3","Line 3 Phase 3","Line 9 Phase 2","Line 9","Line 7 Northern Extension","Line 2 Northern Extension","Line 10 Phase 1","Line 4 Phase 1","Line 1 Eastern Extension","Line 6 East","Line 4 Southern Extension","Line 4","Line 21","Line 4 North Extension","Line 11 (to Disney)","Line 16","Line 2 Western Extension","Line 15 Phase 1","Line 6","Line 1 Phase 4 (Jinghe)","Line 9 (Konggang)","M3 Phase 2","Line 6 Branch (EXPO) Phase 1","Line 5 Phase 1 North","Line 6","Line 13B","Line 5 North Extension","Line 8 Northern Extension","Line 8 Phase 3 (Pujiang Line)","Line 1 Southern Extension","Line 3 Southern Extension","Capital Airport Express","S1 Phase 1","S2 Phase 1","Line 2 Phase 1","Line 1 Phase 1","Line 1 Phase 1","Line 1 Phase 2","Line 1 Phase 3","Line 1 Feeder Phase 1","Line 2 Phase 3","Line 3 Phase 1","Line 3 feeder","Blue","Red","Orange","Yellow","Green","Purple","Jeddah Metro","Mecca Metro","Dammam Metro (a-Sharqiya)","Doha Metro","Phase 1 (Red &amp; Blue)","Phase 2","Phase 1 - Red Line","Phase 2 - Green Line","Phase 3 (Red Line Extension/Route 2020)","Line 1","Line 2","Line 3 Phase 1","Line 3 Phase 2","Line 3 Phase 3","Line 4 (4 Phases)","Line 6","Kuwait Metro","Sergeli Line","Yunusabad Line extension","Line 15","Line 14","Line 16","Line 13 Phase 1","Line 1 Phase 1","Line 4 Phase 1","Line 8 Phase 1","Line 9 Phase 1","Line 10 Phase 2","M3 Phase 2","M4 Phase 3","M8","M5 Phase 2-M13","M12","M11 Phase 1","M11 Phase 2","Sergeli Line","Yunusabad Line extension"],{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]}],"limits":{"lat":[-37.81,60.17],"lng":[-123.13,174.76]}},"evals":[],"jsHooks":[]}</script>
+<p>This is very nice for interactive visualization of the worldwide distribution of completed, ongoing and planned transit projects.</p>
+</div>
